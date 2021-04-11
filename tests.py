@@ -1,4 +1,4 @@
-import os, unittest, requests
+import os, unittest
 from credentials import  email, password
 from selenium import webdriver
 from locators import LoginPage, HomePage, TimeZone
@@ -7,122 +7,84 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
-chrome_path = '###YOUR CHROMEDRIVER PATH HERE###'
+chrome_path = '###ADD YOUR CHROME DRIVER PATH HERE###'
 
 class UIautomation (unittest.TestCase):
+
+    ##COMMON TESTING ACTIONS
     def setUp(self):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--incognito")
-        #chrome_options.add_argument("--kiosk")
-        chrome_options.add_argument('headless')
+        chrome_options.add_argument("--kiosk")
+        #chrome_options.add_argument('headless')
         #chrome_options.add_argument('window-size=1920x1080')
         path_chrome = os.path.normpath(chrome_path)
         self.driver = webdriver.Chrome(options=chrome_options, executable_path= path_chrome)
 
-    def test_TC001_TC002_login(self):
+    def click_button(self,loc):
+        elem = WebDriverWait(self.driver,20).until(EC.visibility_of_element_located(loc))
+        ActionChains(self.driver).move_to_element(elem).perform()
+        elem.click()
+
+    def send_keys(self,loc,keys):
+        elem = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(loc))
+        ActionChains(self.driver).move_to_element(elem).perform()
+        elem.send_keys(keys)
+
+    def enter_keys(self,loc,keys):
+        elem = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(loc))
+        ActionChains(self.driver).move_to_element(elem).perform()
+        elem.send_keys(keys)
+        elem.send_keys(Keys.ENTER)
+
+    def log_in(self):
         self.driver.get("https://eu.devo.com/login")
         # Username
-        inputusername = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(LoginPage.EMAIL))
-        ActionChains(self.driver).move_to_element(inputusername).perform()
-        inputusername.send_keys(email)
+        self.send_keys(LoginPage.EMAIL,email)
         # Password
-        inputpassword = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(LoginPage.PASSWORD))
-        ActionChains(self.driver).move_to_element(inputpassword).perform()
-        inputpassword.send_keys(password)
+        self.send_keys(LoginPage.PASSWORD,password)
         # Sign-in button
-        signin_but = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(LoginPage.SIGIN_BUTTON))
-        ActionChains(self.driver).move_to_element(signin_but).perform()
-        signin_but.click()
+        self.click_button(LoginPage.SIGIN_BUTTON) #Sign-in button
         # Pop-up button
-        close_popup = WebDriverWait(self.driver, 20).until(
-            EC.visibility_of_element_located(HomePage.POPUP))
-        ActionChains(self.driver).move_to_element(close_popup).perform()
-        close_popup.click()
-        # Test1-Log-in
+        self.click_button(HomePage.POPUP)
         assert self.driver.current_url == "https://eu.devo.com/welcome"
         # Main-logo
-        main_navigation = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located(HomePage.MAINLOGO))
-        ActionChains(self.driver).move_to_element(main_navigation).perform()
-        main_navigation.click()
-        # Avatar name
+        self.click_button(HomePage.MAINLOGO)
+
+    ##TEST CASES
+    def test_TC001_login(self):
+        self.log_in()
+        # Test1-Log-in
         avatarname = WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located(HomePage.AVATARNAME))
         ActionChains(self.driver).move_to_element(avatarname).perform()
         assert avatarname.text == email
         print("test_TC001_login: PASS")
+
+    def test_TC002_logout(self):
+        self.log_in()
         # Test2-Log-out
-        logout = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located(HomePage.LOGOUT))
-        ActionChains(self.driver).move_to_element(logout).perform()
-        logout.click()
+        self.click_button(HomePage.LOGOUT)
         self.driver.implicitly_wait(20)
-        assert  self.driver.current_url == "https://eu.devo.com/login"
+        assert self.driver.current_url == "https://eu.devo.com/login"
         print("test_TC002_logout: PASS")
 
     def test_TC003_timezone(self):
-        self.driver.get("https://eu.devo.com/login")
-        # Username
-        inputusername = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(LoginPage.EMAIL))
-        ActionChains(self.driver).move_to_element(inputusername).perform()
-        inputusername.send_keys(email)
-        # Password
-        inputpassword = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(LoginPage.PASSWORD))
-        ActionChains(self.driver).move_to_element(inputpassword).perform()
-        inputpassword.send_keys(password)
-        # Sign-in button
-        signin_but = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(LoginPage.SIGIN_BUTTON))
-        ActionChains(self.driver).move_to_element(signin_but).perform()
-        signin_but.click()
-        # Pop-up button
-        close_popup = WebDriverWait(self.driver, 20).until(
-            EC.visibility_of_element_located(HomePage.POPUP))
-        ActionChains(self.driver).move_to_element(close_popup).perform()
-        close_popup.click()
-        assert self.driver.current_url == "https://eu.devo.com/welcome"
-        # Main-logo
-        main_navigation = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located(HomePage.MAINLOGO))
-        ActionChains(self.driver).move_to_element(main_navigation).perform()
-        main_navigation.click()
+        self.log_in()
         #Timezone icon
-        drop_tzone = WebDriverWait(self.driver,10).until(EC.visibility_of_element_located(TimeZone.DROPTZONE))
-        ActionChains(self.driver).move_to_element(drop_tzone).perform()
-        drop_tzone.click()
-        #Checkbox
-        check_tzone = WebDriverWait(self.driver,10).until(EC.visibility_of_element_located(TimeZone.CHECKTZONE))
-        ActionChains(self.driver).move_to_element(check_tzone).perform()
-        check_tzone.click()
+        self.click_button(TimeZone.DROPTZONE) #Timezone icon
+        self.click_button(TimeZone.CHECKTZONE) #Checkbox
+        self.click_button(TimeZone.TEXTBOX) #TEXTBOX
         self.driver.implicitly_wait(20)
-        #textbox
-        drop_textbox = WebDriverWait(self.driver,10).until(EC.visibility_of_element_located(TimeZone.TEXTBOX))
-        ActionChains(self.driver).move_to_element((drop_textbox)).perform()
-        drop_textbox.click()
-        #input_tzone
-        input_tzone = WebDriverWait(self.driver,10).until(EC.visibility_of_element_located(TimeZone.INPUTTZONE))
-        ActionChains(self.driver).move_to_element((input_tzone)).perform()
-        input_tzone.send_keys('GMT')
-        input_tzone.send_keys(Keys.ENTER)
-        #checkbox_uzone
-        check_uzone =WebDriverWait(self.driver,10).until(EC.visibility_of_element_located(TimeZone.CHECKUZONE))
-        ActionChains(self.driver).move_to_element(check_uzone).perform()
-        check_uzone.click()
-        #save_button
-        save_button = WebDriverWait(self.driver,10).until(EC.visibility_of_element_located(TimeZone.SAVEBUTTON))
-        ActionChains(self.driver).move_to_element(save_button).perform()
-        save_button.click()
-        # Pop-up button
-        close_popup = WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located(HomePage.POPUP))
-        ActionChains(self.driver).move_to_element(close_popup).perform()
-        close_popup.click()
+        self.enter_keys(TimeZone.INPUTTZONE,'GMT') #input_tzone
+        self.click_button(TimeZone.CHECKUZONE) #checkbox_uzone
+        self.click_button(TimeZone.SAVEBUTTON) #save_button
+        self.click_button(HomePage.POPUP) #Pop-up button
         assert self.driver.current_url == "https://eu.devo.com/welcome"
-        drop_tzone = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(TimeZone.DROPTZONE))
-        ActionChains(self.driver).move_to_element(drop_tzone).perform()
-        drop_tzone.click()
-        drop_textbox = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(TimeZone.TEXTBOX))
-        ActionChains(self.driver).move_to_element((drop_textbox)).perform()
-        drop_textbox.click()
+        self.click_button(TimeZone.DROPTZONE) #Timezone
+        self.click_button(TimeZone.TEXTBOX) #Textbox
         print("test_TC003_timezone:PASS")
 
+    #Close driver
     def tearDown(self):
         self.driver.close()
